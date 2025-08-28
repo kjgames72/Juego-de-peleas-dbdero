@@ -1,0 +1,1340 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de lucha 1v1</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=bangers&family=press+start+2p&display=swap');
+       
+        body {
+            background-color: #222;
+            color: #fff;
+            font-family: 'press start 2p', cursive;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            flex-direction: column;
+            text-align: center;
+        }
+
+        #gamecontainer {
+            position: relative;
+            border: 5px solid #fff;
+            background: linear-gradient(to bottom, #7a7a7a, #333);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            width: 90vw;
+            max-width: 1200px;
+            height: 90vh;
+            max-height: 800px;
+        }
+
+        #platformselection, #gamemodeselection, #difficultyselection, #characterselection, #gamescreen {
+            display: none;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding-top: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        
+        #platformselection {
+            display: flex; /* Mostrar por defecto */
+        }
+        
+        #characterselection h1, #characterselection h2 {
+            margin-bottom: 10px;
+        }
+
+        .action-button {
+            margin: 20px;
+            padding: 20px 40px;
+            font-family: 'press start 2p', cursive;
+            font-size: 1.2rem;
+            background-color: #ff5733;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #d93d19;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        .action-button:active {
+            transform: translatey(5px);
+            box-shadow: none;
+        }
+
+        .action-button.small {
+            padding: 15px 30px;
+            font-size: 1rem;
+        }
+
+        .character-card {
+            background-color: #333;
+            border: 3px solid #666;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 10px;
+            width: 200px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: inline-block;
+            vertical-align: top;
+        }
+
+        .character-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px #ff5733;
+        }
+
+        .character-card.selected {
+            border-color: #ff5733;
+            box-shadow: 0 0 20px #ff5733;
+            transform: scale(1.1);
+        }
+
+        .character-card h3 {
+            font-family: 'bangers', cursive;
+            color: #ff5733;
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .character-card .stats p {
+            font-size: 0.7rem;
+            margin: 5px 0;
+            line-height: 1.2;
+        }
+
+        .player-selection-container {
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            margin-top: 20px;
+        }
+       
+        #startgamebutton {
+            margin-top: 30px;
+            padding: 15px 30px;
+            font-family: 'press start 2p', cursive;
+            font-size: 1rem;
+            background-color: #ff5733;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #d93d19;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        #startgamebutton:active {
+            transform: translatey(5px);
+            box-shadow: none;
+        }
+
+        #healthbars {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            position: absolute;
+            top: 0;
+            z-index: 10;
+        }
+
+        .health-bar {
+            width: 40%;
+            height: 20px;
+            background-color: #333;
+            border: 2px solid #fff;
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .health {
+            height: 100%;
+            background-color: #00ff00;
+            transition: width 0.3s;
+        }
+
+        .name-tag {
+            position: absolute;
+            top: -25px;
+            font-size: 0.8rem;
+        }
+       
+        .name-tag.player1 { left: 5px; }
+        .name-tag.player2 { right: 5px; }
+
+        .super-bar {
+            width: 40%;
+            height: 10px;
+            background-color: #555;
+            border: 1px solid #fff;
+            border-radius: 3px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+       
+        .super-meter {
+            height: 100%;
+            background-color: #00bfff;
+            transition: width 0.3s;
+        }
+
+        .super-tag {
+            position: absolute;
+            top: -20px;
+            font-size: 0.6rem;
+        }
+        .super-tag.player1 { left: 5px; }
+        .super-tag.player2 { right: 5px; }
+
+        #timer {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translatex(-50%);
+            font-size: 1.5rem;
+            color: #fff;
+            background-color: #333;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+
+        #announcement {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            color: #fff;
+            text-shadow: 0 0 10px #000;
+            z-index: 20;
+            animation: fadein 1s forwards;
+            display: none;
+            font-family: 'bangers', cursive;
+        }
+
+        @keyframes fadein {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        canvas {
+            display: block;
+            background-color: #333;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            font-size: 0.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .controls .player1-controls { left: 20px; }
+        .controls .player2-controls { right: 20px; }
+
+        .controls p {
+            margin: 0;
+            font-family: monospace;
+            background: rgba(0,0,0,0.5);
+            padding: 5px;
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        /* estilos específicos para las habilidades */
+        .ability-indicator {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: gold;
+            border-radius: 50%;
+            animation: pulse 1s infinite alternate;
+            z-index: 10;
+        }
+       
+        .ability-indicator.fire-spirit {
+            background-color: orange;
+            width: 30px;
+            height: 30px;
+            animation: bounce 0.5s infinite alternate;
+        }
+       
+        .ability-indicator.bat {
+            background-color: brown;
+            width: 100px;
+            height: 20px;
+            animation: swing 0.3s forwards;
+        }
+
+        .ability-indicator.mogolla {
+            background-color: #795548;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+
+        .ability-indicator.shield {
+            background-color: #007BFF;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            opacity: 0.6;
+            animation: pulse-shield 1s infinite;
+        }
+        
+        .ability-indicator.sleigh-projectile {
+            background-color: #8B0000;
+            width: 40px;
+            height: 20px;
+            border-radius: 5px;
+            animation: none;
+        }
+       
+        .ability-indicator.poison {
+            background-color: #A020F0;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+        }
+       
+        @keyframes pulse {
+            from { transform: scale(1); opacity: 1; }
+            to { transform: scale(1.5); opacity: 0; }
+        }
+        
+        @keyframes pulse-shield {
+            from { transform: scale(1); opacity: 0.6; }
+            to { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        @keyframes bounce {
+            from { transform: translatey(0); }
+            to { transform: translatey(-10px); }
+        }
+
+        @keyframes swing {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(90deg); }
+        }
+
+        /* Estilos para los botones de celular */
+        .mobile-controls {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: none;
+            pointer-events: none;
+            z-index: 15;
+        }
+
+        .mobile-button {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            color: #fff;
+            font-family: 'press start 2p', cursive;
+            font-size: 0.6rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+            pointer-events: auto;
+        }
+
+        .mobile-button.move {
+            width: 50px;
+            height: 50px;
+            font-size: 0.5rem;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .mobile-button.attack {
+            background-color: rgba(255, 87, 51, 0.4);
+            border-color: rgba(255, 87, 51, 0.6);
+        }
+
+        .mobile-button.ability {
+            background-color: rgba(0, 191, 255, 0.4);
+            border-color: rgba(0, 191, 255, 0.6);
+        }
+
+        /* Posicionamiento de botones para Jugador 1 */
+        #p1-up { top: 60%; left: 10%; }
+        #p1-left { top: 70%; left: 5%; }
+        #p1-down { top: 80%; left: 10%; }
+        #p1-right { top: 70%; left: 15%; }
+        #p1-attack { top: 70%; left: 30%; }
+        #p1-ability { top: 85%; left: 30%; }
+
+        /* Posicionamiento de botones para Jugador 2 */
+        #p2-up { top: 60%; right: 10%; }
+        #p2-left { top: 70%; right: 15%; }
+        #p2-down { top: 80%; right: 10%; }
+        #p2-right { top: 70%; right: 5%; }
+        #p2-attack { top: 70%; right: 30%; }
+        #p2-ability { top: 85%; right: 30%; }
+    </style>
+</head>
+<body>
+    <div id="gamecontainer">
+        <div id="platformselection">
+            <h1 style="font-family: 'bangers', cursive; color: #ff5733; font-size: 2.5rem; text-shadow: 2px 2px #000;">¿CÓMO VAS A JUGAR?</h1>
+            <button id="play-pc-button" class="action-button">Jugar en PC</button>
+            <button id="play-mobile-button" class="action-button">Jugar en Celular</button>
+        </div>
+
+        <div id="gamemodeselection">
+            <h1 style="font-family: 'bangers', cursive; color: #ff5733; font-size: 2.5rem; text-shadow: 2px 2px #000;">¿MODO DE JUEGO?</h1>
+            <button id="play-pvp-button" class="action-button">Vs. Jugador</button>
+            <button id="play-bot-button" class="action-button">Vs. Bot</button>
+        </div>
+
+        <div id="difficultyselection">
+            <h1 style="font-family: 'bangers', cursive; color: #ff5733; font-size: 2.5rem; text-shadow: 2px 2px #000;">DIFICULTAD DEL BOT</h1>
+            <button id="difficulty-normal" class="action-button small" data-difficulty="normal">NORMAL</button>
+            <button id="difficulty-hard" class="action-button small" data-difficulty="hard">DIFÍCIL</button>
+            <button id="difficulty-insane" class="action-button small" data-difficulty="insane">INSANO</button>
+        </div>
+       
+        <div id="characterselection">
+            <h1 style="font-family: 'bangers', cursive; color: #ff5733; font-size: 2.5rem; text-shadow: 2px 2px #000;">ELIGE A TU LUCHADOR</h1>
+            <div class="player-selection-container">
+                <div id="player1-selection">
+                    <h2>JUGADOR 1</h2>
+                </div>
+                <div id="player2-selection">
+                    <h2>JUGADOR 2</h2>
+                </div>
+            </div>
+           
+            <div id="characterlist">
+                </div>
+            <button id="startgamebutton" disabled>COMENZAR JUEGO</button>
+            <div class="controls" style="position: static; margin-top: 20px; margin-bottom: 20px;">
+                <p>JUGADOR 1: <br> WASD (mover) | ESPACIO (atacar) | TECLA 5 (habilidad)</p>
+                <p>JUGADOR 2: <br> FLECHAS (mover) | ENTER (atacar) | TECLA 0 (habilidad)</p>
+            </div>
+        </div>
+
+        <div id="gamescreen">
+            <div id="healthbars">
+                <div class="health-bar">
+                    <span class="name-tag player1"></span>
+                    <div class="health player1-health"></div>
+                    <div class="super-bar">
+                        <div class="super-meter player1-super"></div>
+                    </div>
+                </div>
+                <div class="health-bar">
+                    <span class="name-tag player2"></span>
+                    <div class="health player2-health"></div>
+                    <div class="super-bar">
+                        <div class="super-meter player2-super"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="timer"></div>
+            <div id="announcement"></div>
+            <canvas id="gamecanvas"></canvas>
+
+            <div id="mobile-controls" class="mobile-controls">
+                <div id="p1-up" class="mobile-button move" data-key="w">⬆️</div>
+                <div id="p1-left" class="mobile-button move" data-key="a">⬅️</div>
+                <div id="p1-down" class="mobile-button move" data-key="s">⬇️</div>
+                <div id="p1-right" class="mobile-button move" data-key="d">➡️</div>
+                <div id="p1-attack" class="mobile-button attack" data-key=" ">👊</div>
+                <div id="p1-ability" class="mobile-button ability" data-key="5">✨</div>
+
+                <div id="p2-up" class="mobile-button move" data-key="ArrowUp">⬆️</div>
+                <div id="p2-left" class="mobile-button move" data-key="ArrowLeft">⬅️</div>
+                <div id="p2-down" class="mobile-button move" data-key="ArrowDown">⬇️</div>
+                <div id="p2-right" class="mobile-button move" data-key="ArrowRight">➡️</div>
+                <div id="p2-attack" class="mobile-button attack" data-key="Enter">👊</div>
+                <div id="p2-ability" class="mobile-button ability" data-key="0">✨</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gamecanvas');
+        const ctx = canvas.getContext('2d');
+
+        const gameContainer = document.getElementById('gamecontainer');
+        const platformSelectionScreen = document.getElementById('platformselection');
+        const gameModeSelectionScreen = document.getElementById('gamemodeselection');
+        const difficultySelectionScreen = document.getElementById('difficultyselection');
+        const characterSelectionScreen = document.getElementById('characterselection');
+        const gameScreen = document.getElementById('gamescreen');
+        const startGameButton = document.getElementById('startgamebutton');
+        const characterListDiv = document.getElementById('characterlist');
+        const player1SelectionDiv = document.getElementById('player1-selection');
+        const player2SelectionDiv = document.getElementById('player2-selection');
+        const mobileControlsDiv = document.getElementById('mobile-controls');
+       
+        // Elementos de la UI del juego
+        const player1HealthBar = document.querySelector('.player1-health');
+        const player2HealthBar = document.querySelector('.player2-health');
+        const player1SuperBar = document.querySelector('.player1-super');
+        const player2SuperBar = document.querySelector('.player2-super');
+        const player1NameTag = document.querySelector('.name-tag.player1');
+        const player2NameTag = document.querySelector('.name-tag.player2');
+        const timerElement = document.getElementById('timer');
+        const announcementElement = document.getElementById('announcement');
+
+        // Controles de los jugadores (PC)
+        const player1Keys = {
+            move: {
+                left: 'a',
+                right: 'd',
+                up: 'w',
+                down: 's'
+            },
+            attack: ' ',
+            ability: '5'
+        };
+        const player2Keys = {
+            move: {
+                left: 'ArrowLeft',
+                right: 'ArrowRight',
+                up: 'ArrowUp',
+                down: 'ArrowDown'
+            },
+            attack: 'Enter',
+            ability: '0'
+        };
+
+        // Definición de personajes con sus estadísticas
+        const characters = [
+            { id: 'horno', name: 'Horno de CR', color: 'orange',
+              stats: { health: 100, damage: 15, speed: 5 },
+              ability: { name: 'Espíritu de Fuego', cost: 5, effect: 'invokes', damage: 40 } },
+            { id: 'tungtung', name: 'Tung Tung Tung Sahur', color: 'brown',
+              stats: { health: 120, damage: 10, speed: 4 },
+              ability: { name: 'Baterot', cost: 5, effect: 'push', power: 30 } },
+            { id: 'cr7', name: 'CR7', color: 'darkgreen',
+              stats: { health: 90, damage: 12, speed: 7 },
+              ability: { name: 'Siuuu!', cost: 5, effect: 'buff', duration: 5, multiplier: 2 } },
+            { id: 'juandavid', name: 'Juan David', color: 'darkblue',
+              stats: { health: 105, damage: 13, speed: 5.5 },
+              ability: { name: 'Mogolla Paralizante', cost: 5, effect: 'stun', duration: 3 } },
+            { id: 'walterwhite', name: 'Walter White', color: 'lightgreen',
+              stats: { health: 110, damage: 10, speed: 4.5 },
+              ability: { name: 'Escudo de Producto', cost: 5, effect: 'invincible', duration: 5 } },
+            { id: 'penny', name: 'Penny', color: 'pink',
+              stats: { health: 95, damage: 11, speed: 6 },
+              ability: { name: 'Mortero', cost: 5, effect: 'area_damage', damage: 25, duration: 4 } },
+            { id: 'elgrinch', name: 'El Grinch', color: 'green',
+              stats: { health: 130, damage: 8, speed: 4 },
+              ability: { name: 'Trineo', cost: 5, effect: 'sleigh_projectile', damage: 50 } },
+            { id: 'bluey', name: 'Bluey', color: 'skyblue',
+              stats: { health: 100, damage: 10, speed: 5.5 },
+              ability: { name: 'Escudo', cost: 5, effect: 'shield', duration: 5 } },
+            { id: 'elbananero', name: 'El Bananero', color: 'yellow',
+              stats: { health: 105, damage: 16, speed: 5.5 },
+              ability: { name: 'Efecto de Daga', cost: 5, effect: 'poison', damage: 5, duration: 5 } }
+        ];
+
+        let player1 = null;
+        let player2 = null;
+        let gameActive = false;
+        let gameInterval;
+        let timer = 90;
+        let countdownInterval;
+        let isMobile = false;
+        let gameMode = 'pvp'; // 'pvp' o 'bot'
+        let botDifficulty = 'normal'; // 'normal', 'hard', 'insane'
+        let playerTurn = 1; // Para el modo Vs. Bot, indica quién está seleccionando
+
+        // Estado del juego
+        const keys = {};
+        const state = {
+            player1: null,
+            player2: null,
+            projectiles: [],
+            abilities: [],
+            poisonedPlayers: new Map()
+        };
+        let botLastAttackTime = 0;
+        let botHasFired = false;
+        let botProjectile = null;
+
+        // Clase para representar un jugador
+        class Player {
+            constructor(x, y, charData, playerNumber) {
+                this.x = x;
+                this.y = y;
+                this.width = 50;
+                this.height = 50;
+                this.color = charData.color;
+                this.name = charData.name;
+                this.stats = { ...charData.stats };
+                this.health = this.stats.health;
+                this.superMeter = 0;
+                this.isAttacking = false;
+                this.isStunned = false;
+                this.isInvincible = false;
+                this.buffActive = false;
+                this.buffEnd = 0;
+                this.abilityCooldown = 0;
+                this.playerNumber = playerNumber;
+                this.abilityData = charData.ability;
+                this.isBot = charData.isBot || false;
+               
+                // Cooldown para ataques
+                this.canAttack = true;
+                this.attackCooldownTime = 500;
+
+                // Estado de las habilidades
+                this.canRevive = true; // Para El Grinch
+                this.isShielded = false; // Para Bluey
+                this.shieldEnd = 0;
+                this.isPoisoned = false; // Para El Bananero
+            }
+
+            draw() {
+                // Dibujar el escudo de Bluey si está activo
+                if (this.isShielded) {
+                    ctx.beginPath();
+                    ctx.arc(this.x + this.width / 2, this.y + this.height / 2, this.width * 1.5, 0, 2 * Math.PI);
+                    ctx.strokeStyle = '#007BFF';
+                    ctx.lineWidth = 5;
+                    ctx.stroke();
+                }
+
+                ctx.fillStyle = this.isInvincible ? 'rgba(255, 255, 255, 0.5)' : this.color;
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+               
+                ctx.font = '12px "Press Start 2P"';
+                ctx.fillStyle = '#fff';
+                ctx.textAlign = 'center';
+                ctx.fillText(this.name, this.x + this.width / 2, this.y - 10);
+
+                // Indicador de veneno
+                if (this.isPoisoned) {
+                    ctx.fillStyle = 'purple';
+                    ctx.beginPath();
+                    ctx.arc(this.x + this.width / 2, this.y - 25, 5, 0, 2 * Math.PI);
+                    ctx.fill();
+                }
+            }
+
+            update() {
+                if (this.isStunned) return;
+
+                // Lógica de movimiento para bot
+                if (this.isBot) {
+                    const opponent = this.playerNumber === 1 ? state.player2 : state.player1;
+                    const dx = opponent.x - this.x;
+                    const dy = opponent.y - this.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    // Movimiento hacia el oponente
+                    if (distance > 100) {
+                        this.x += (dx / distance) * this.stats.speed;
+                        this.y += (dy / distance) * this.stats.speed;
+                    }
+
+                    // Lógica de ataque y habilidad del bot
+                    // Ataque
+                    if (distance < 200) {
+                        this.attack(opponent);
+                    }
+                   
+                    // Habilidad
+                    if (botDifficulty === 'insane') {
+                        this.superMeter = this.abilityData.cost; // Siempre tiene super
+                        this.useAbility(opponent);
+                    } else if (this.superMeter >= this.abilityData.cost && Math.random() < 0.01) {
+                        this.useAbility(opponent);
+                    }
+                } else { // Lógica de movimiento para jugador humano
+                    if (this.playerNumber === 1) {
+                        if (keys[player1Keys.move.left]) this.x -= this.stats.speed;
+                        if (keys[player1Keys.move.right]) this.x += this.stats.speed;
+                        if (keys[player1Keys.move.up]) this.y -= this.stats.speed;
+                        if (keys[player1Keys.move.down]) this.y += this.stats.speed;
+                    } else {
+                        if (keys[player2Keys.move.left]) this.x -= this.stats.speed;
+                        if (keys[player2Keys.move.right]) this.x += this.stats.speed;
+                        if (keys[player2Keys.move.up]) this.y -= this.stats.speed;
+                        if (keys[player2Keys.move.down]) this.y += this.stats.speed;
+                    }
+                }
+
+                // Colisiones con los bordes
+                if (this.x < 0) this.x = 0;
+                if (this.x + this.width > canvas.width) this.x = canvas.width - this.width;
+                if (this.y < 0) this.y = 0;
+                if (this.y + this.height > canvas.height) this.y = canvas.height - this.height;
+
+                // Actualizar buffs
+                if (this.buffActive && Date.now() > this.buffEnd) {
+                    this.buffActive = false;
+                    this.stats.speed /= this.abilityData.multiplier;
+                    this.stats.damage /= this.abilityData.multiplier;
+                }
+                
+                // Actualizar estado del escudo de Bluey
+                if (this.isShielded && Date.now() > this.shieldEnd) {
+                    this.isShielded = false;
+                }
+            }
+
+            takeDamage(amount) {
+                if (this.isInvincible || this.isShielded) return;
+                
+                this.health -= amount;
+                
+                if (this.health < 0) this.health = 0;
+                
+                // Lógica de revivir de El Grinch
+                if (this.health <= 0 && this.name === 'El Grinch' && this.canRevive) {
+                    this.health = this.stats.health * 0.5; // Revive con 50% de HP
+                    this.canRevive = false;
+                    announcementElement.textContent = `${this.name} se ha revivido!`;
+                    announcementElement.style.display = 'block';
+                    setTimeout(() => announcementElement.style.display = 'none', 2000);
+                }
+            }
+
+            applyPoison(duration, damage) {
+                // Si el jugador ya está envenenado, no aplica el efecto de nuevo
+                if (state.poisonedPlayers.has(this)) return;
+
+                this.isPoisoned = true;
+                const poisonInterval = setInterval(() => {
+                    this.takeDamage(damage);
+                    if (this.health <= 0) {
+                        clearInterval(poisonInterval);
+                        state.poisonedPlayers.delete(this);
+                        this.isPoisoned = false;
+                    }
+                }, 1000);
+
+                const timeoutId = setTimeout(() => {
+                    clearInterval(poisonInterval);
+                    state.poisonedPlayers.delete(this);
+                    this.isPoisoned = false;
+                }, duration * 1000);
+               
+                state.poisonedPlayers.set(this, { interval: poisonInterval, timeout: timeoutId });
+            }
+
+            gainSuper() {
+                this.superMeter = Math.min(this.abilityData.cost, this.superMeter + 1);
+            }
+
+            attack(opponent) {
+                const now = Date.now();
+                if (this.isBot && botDifficulty === 'normal') {
+                    if (now - botLastAttackTime < 1000) return; // Cooldown de 1 segundo para el bot normal
+                    botLastAttackTime = now;
+                } else if (this.isBot && botDifficulty === 'hard') {
+                    if (botProjectile) return; // Esperar a que el proyectil anterior desaparezca
+                } else if (!this.canAttack) {
+                    return; // Cooldown para jugador humano
+                }
+                
+                this.canAttack = false;
+                setTimeout(() => {
+                    this.canAttack = true;
+                }, this.attackCooldownTime);
+                
+                let speedMultiplier = 1;
+                if (this.isBot && botDifficulty === 'hard') {
+                    speedMultiplier = 1.2;
+                }
+
+                this.isAttacking = true;
+                if (!this.isBot) { // Los bots no ganan super con ataque
+                    this.gainSuper();
+                }
+                const newProjectile = new Projectile(this.x + this.width / 2, this.y + this.height / 2, this.stats.damage, 'white', 'normal', this, opponent, speedMultiplier);
+                state.projectiles.push(newProjectile);
+                if (this.isBot && botDifficulty === 'hard') {
+                    botProjectile = newProjectile;
+                }
+            }
+
+            useAbility(target) {
+                if (this.superMeter < this.abilityData.cost && botDifficulty !== 'insane') return;
+                if (gameMode === 'bot' && botDifficulty === 'insane' && this.playerNumber === 1 && this.superMeter === 0) return;
+
+                if (this.playerNumber === 1 && gameMode === 'bot' && botDifficulty === 'insane') {
+                    if (this.superMeter === 0) {
+                        return; // Evita usar la habilidad si no está cargada después del primer uso
+                    }
+                }
+                
+                this.superMeter = 0;
+                const abilityEffect = this.abilityData.effect;
+                const opponent = (this.playerNumber === 1) ? state.player2 : state.player1;
+
+                switch (abilityEffect) {
+                    case 'invokes':
+                        state.projectiles.push(new Projectile(this.x, this.y, this.abilityData.damage, 'orange', 'spirit', this, opponent));
+                        break;
+                    case 'push':
+                        const direction = (opponent.x > this.x) ? 1 : -1;
+                        opponent.x += direction * this.abilityData.power;
+                        break;
+                    case 'buff':
+                        this.buffActive = true;
+                        this.buffEnd = Date.now() + this.abilityData.duration * 1000;
+                        this.stats.speed *= this.abilityData.multiplier;
+                        this.stats.damage *= this.abilityData.multiplier;
+                        break;
+                    case 'stun':
+                        state.projectiles.push(new Projectile(this.x, this.y, 0, '#795548', 'stun', this, opponent));
+                        break;
+                    case 'invincible':
+                        this.isInvincible = true;
+                        setTimeout(() => this.isInvincible = false, this.abilityData.duration * 1000);
+                        break;
+                    case 'area_damage':
+                        const mortarX = opponent.x + (Math.random() - 0.5) * 200;
+                        const mortarY = opponent.y + (Math.random() - 0.5) * 200;
+                        state.abilities.push({
+                            type: 'mortar',
+                            x: mortarX,
+                            y: mortarY,
+                            damage: this.abilityData.damage,
+                            duration: this.abilityData.duration,
+                            end: Date.now() + this.abilityData.duration * 1000,
+                            damageInterval: setInterval(() => {
+                                const dx = opponent.x - mortarX;
+                                const dy = opponent.y - mortarY;
+                                const distance = Math.sqrt(dx * dx + dy * dy);
+                                if (distance < 50) { // Radio de daño
+                                    opponent.takeDamage(this.abilityData.damage);
+                                }
+                            }, 1000)
+                        });
+                        break;
+                    case 'sleigh_projectile':
+                        // Proyectil que busca al oponente más cercano
+                        const nearestEnemy = (this.playerNumber === 1) ? state.player2 : state.player1;
+                        if (nearestEnemy) {
+                            state.projectiles.push(new Projectile(this.x + this.width / 2, this.y + this.height / 2, this.abilityData.damage, '#8B0000', 'sleigh', this, nearestEnemy));
+                        }
+                        break;
+                    case 'shield':
+                        this.isShielded = true;
+                        this.shieldEnd = Date.now() + this.abilityData.duration * 1000;
+                        break;
+                    case 'poison':
+                        // Lanza un proyectil de veneno
+                        state.projectiles.push(new Projectile(this.x + this.width / 2, this.y + this.height / 2, 0, 'purple', 'poison', this, opponent, 2));
+                        break;
+                }
+            }
+        }
+
+        // Clase para los proyectiles (ataques)
+        class Projectile {
+            constructor(x, y, damage, color, type, owner, target, speedMultiplier = 1) {
+                this.x = x;
+                this.y = y;
+                this.width = (type === 'sleigh') ? 40 : 15;
+                this.height = (type === 'sleigh') ? 20 : 15;
+                this.damage = damage;
+                this.color = color;
+                this.speed = (type === 'poison') ? 15 * speedMultiplier : 10 * speedMultiplier;
+                this.type = type;
+                this.owner = owner;
+                this.target = target;
+               
+                // Calcular dirección hacia el objetivo
+                const dx = target.x - this.x;
+                const dy = target.y - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                this.vx = (dx / distance) * this.speed;
+                this.vy = (dy / distance) * this.speed;
+            }
+
+            draw() {
+                ctx.fillStyle = this.color;
+                if (this.type === 'stun') {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, 15, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (this.type === 'spirit') {
+                     ctx.beginPath();
+                     ctx.arc(this.x, this.y, 15, 0, Math.PI * 2);
+                     ctx.fill();
+                     
+                     // Efecto de llama simple
+                     ctx.fillStyle = 'yellow';
+                     ctx.beginPath();
+                     ctx.arc(this.x + (Math.random() - 0.5) * 5, this.y + (Math.random() - 0.5) * 5, 10, 0, Math.PI * 2);
+                     ctx.fill();
+                } else if (this.type === 'sleigh') {
+                    // Dibuja el proyectil como un trineo (rectángulo)
+                    ctx.fillStyle = this.color;
+                    ctx.fillRect(this.x, this.y, this.width, this.height);
+                } else if (this.type === 'poison') {
+                    // Dibuja el veneno
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, 15, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    ctx.fillRect(this.x, this.y, this.width, this.height);
+                }
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+            }
+
+            checkCollision(player) {
+                return this.x < player.x + player.width &&
+                       this.x + this.width > player.x &&
+                       this.y < player.y + player.height &&
+                       this.y + this.height > player.y;
+            }
+        }
+
+        // --- Lógica del juego ---
+
+        function showPlatformSelection() {
+            platformSelectionScreen.style.display = 'flex';
+            gameModeSelectionScreen.style.display = 'none';
+            difficultySelectionScreen.style.display = 'none';
+            characterSelectionScreen.style.display = 'none';
+            gameScreen.style.display = 'none';
+        }
+
+        function showGameModeSelection() {
+            platformSelectionScreen.style.display = 'none';
+            gameModeSelectionScreen.style.display = 'flex';
+        }
+
+        function showDifficultySelection() {
+            gameModeSelectionScreen.style.display = 'none';
+            difficultySelectionScreen.style.display = 'flex';
+            gameMode = 'bot';
+        }
+
+        function showCharacterSelection() {
+            difficultySelectionScreen.style.display = 'none';
+            gameModeSelectionScreen.style.display = 'none';
+            characterSelectionScreen.style.display = 'flex';
+            
+            // Ajustar el texto de selección según el modo de juego
+            if (gameMode === 'bot') {
+                player1SelectionDiv.innerHTML = `<h2>TU PERSONAJE</h2>`;
+                player2SelectionDiv.innerHTML = `<h2>PERSONAJE DEL BOT</h2>`;
+            } else { // PvP
+                player1SelectionDiv.innerHTML = `<h2>JUGADOR 1</h2>`;
+                player2SelectionDiv.innerHTML = `<h2>JUGADOR 2</h2>`;
+            }
+
+            // Ocultar controles de texto para PC si es móvil
+            if (isMobile) {
+                document.querySelector('.controls').style.display = 'none';
+            } else {
+                document.querySelector('.controls').style.display = 'block';
+            }
+            generateCharacterCards();
+        }
+
+        function generateCharacterCards() {
+            characterListDiv.innerHTML = '';
+            characters.forEach(char => {
+                const card = document.createElement('div');
+                card.className = 'character-card';
+                card.dataset.id = char.id;
+                
+                // Actualizar la descripción de la habilidad
+                let abilityDescription = '';
+                switch(char.ability.effect) {
+                    case 'invokes':
+                        abilityDescription = 'Invoca un espíritu de fuego que persigue al enemigo.';
+                        break;
+                    case 'push':
+                        abilityDescription = 'Lanza un ataque que empuja al oponente.';
+                        break;
+                    case 'buff':
+                        abilityDescription = 'Aumenta su velocidad y daño temporalmente.';
+                        break;
+                    case 'stun':
+                        abilityDescription = 'Lanza un proyectil que aturde al enemigo.';
+                        break;
+                    case 'invincible':
+                        abilityDescription = 'Se vuelve invulnerable a los ataques por un tiempo.';
+                        break;
+                    case 'area_damage':
+                        abilityDescription = 'Dispara un mortero que causa daño en un área.';
+                        break;
+                    case 'sleigh_projectile':
+                        abilityDescription = 'Lanza un trineo que persigue al rival.';
+                        break;
+                    case 'shield':
+                        abilityDescription = 'Crea un escudo de protección que lo vuelve invulnerable.';
+                        break;
+                    case 'poison':
+                        abilityDescription = `Envenena al enemigo, infligiendo ${char.ability.damage} de daño cada segundo por ${char.ability.duration} segundos.`;
+                        break;
+                    default:
+                        abilityDescription = 'Habilidad especial.';
+                }
+                
+                card.innerHTML = `
+                    <h3 style="color:${char.color}">${char.name}</h3>
+                    <div class="stats">
+                        <p><strong>Vida:</strong> ${char.stats.health}</p>
+                        <p><strong>Daño:</strong> ${char.stats.damage}</p>
+                        <p><strong>Velocidad:</strong> ${char.stats.speed}</p>
+                        <p><strong>Habilidad:</strong> ${char.ability.name}</p>
+                        <p style="font-size: 0.6rem;">${abilityDescription}</p>
+                    </div>
+                `;
+                card.addEventListener('click', () => {
+                    selectCharacter(card);
+                });
+                characterListDiv.appendChild(card);
+            });
+        }
+
+        function selectCharacter(card) {
+            const charId = card.dataset.id;
+            const selectedChar = characters.find(c => c.id === charId);
+
+            if (gameMode === 'bot') {
+                if (playerTurn === 1) {
+                    // Selecciona tu personaje (Jugador 1)
+                    if (player1 && player1.id === charId) {
+                        player1 = null;
+                        player1SelectionDiv.innerHTML = `<h2>TU PERSONAJE</h2>`;
+                        card.classList.remove('selected');
+                    } else if (player1) {
+                        return; // Ya hay un personaje seleccionado
+                    } else {
+                        player1 = selectedChar;
+                        player1SelectionDiv.innerHTML = `<h2>TU PERSONAJE</h2><p>${player1.name}</p>`;
+                        card.classList.add('selected');
+                        playerTurn = 2; // Siguiente turno para el bot
+                        characterSelectionScreen.querySelector('h1').textContent = "ELIGE EL LUCHADOR DEL BOT";
+                    }
+                } else if (playerTurn === 2) {
+                    // Selecciona el personaje del bot (Jugador 2)
+                    if (player2 && player2.id === charId) {
+                        player2 = null;
+                        player2SelectionDiv.innerHTML = `<h2>PERSONAJE DEL BOT</h2>`;
+                        card.classList.remove('selected');
+                    } else if (player2) {
+                         return;
+                    } else if (charId !== player1.id) { // No puede ser el mismo que el jugador 1
+                        player2 = selectedChar;
+                        player2SelectionDiv.innerHTML = `<h2>PERSONAJE DEL BOT</h2><p>${player2.name}</p>`;
+                        card.classList.add('selected');
+                    }
+                }
+            } else { // Modo PvP
+                if (!player1) {
+                    player1 = selectedChar;
+                    player1SelectionDiv.innerHTML = `<h2>JUGADOR 1</h2><p>${player1.name}</p>`;
+                    card.classList.add('selected');
+                } else if (!player2 && charId !== player1.id) {
+                    player2 = selectedChar;
+                    player2SelectionDiv.innerHTML = `<h2>JUGADOR 2</h2><p>${player2.name}</p>`;
+                    card.classList.add('selected');
+                } else if (charId === player1.id) {
+                    player1 = null;
+                    player1SelectionDiv.innerHTML = `<h2>JUGADOR 1</h2>`;
+                    card.classList.remove('selected');
+                } else if (charId === player2.id) {
+                    player2 = null;
+                    player2SelectionDiv.innerHTML = `<h2>JUGADOR 2</h2>`;
+                    card.classList.remove('selected');
+                }
+            }
+
+            startGameButton.disabled = !(player1 && player2);
+        }
+
+        function startGame() {
+            if (!player1 || !player2) return;
+
+            characterSelectionScreen.style.display = 'none';
+            gameScreen.style.display = 'flex';
+           
+            let initialP1Health = player1.stats.health;
+            if (gameMode === 'bot' && botDifficulty === 'insane') {
+                initialP1Health *= 3;
+            }
+
+            state.player1 = new Player(canvas.width * 0.25, canvas.height / 2, { ...player1, stats: { ...player1.stats, health: initialP1Health } }, 1);
+            state.player2 = new Player(canvas.width * 0.75, canvas.height / 2, { ...player2, isBot: gameMode === 'bot' }, 2);
+
+            player1NameTag.textContent = state.player1.name;
+            player2NameTag.textContent = state.player2.name;
+
+            mobileControlsDiv.style.display = isMobile ? 'block' : 'none';
+            if (isMobile) {
+                canvas.style.pointerEvents = 'auto'; 
+            }
+
+            // Insane mode bonus
+            if (gameMode === 'bot' && botDifficulty === 'insane') {
+                state.player1.isInvincible = true;
+                setTimeout(() => state.player1.isInvincible = false, 3500);
+                state.player1.superMeter = state.player1.abilityData.cost;
+            }
+
+            gameActive = true;
+            countdown();
+            gameInterval = setInterval(gameLoop, 1000 / 60);
+        }
+
+        function countdown() {
+            countdownInterval = setInterval(() => {
+                timer--;
+                timerElement.textContent = timer;
+                if (timer <= 0) {
+                    endGame('¡Tiempo Fuera!');
+                }
+            }, 1000);
+        }
+
+        function endGame(message) {
+            clearInterval(gameInterval);
+            clearInterval(countdownInterval);
+            gameActive = false;
+            announcementElement.textContent = message;
+            announcementElement.style.display = 'block';
+            setTimeout(() => {
+                location.reload();
+            }, 5000);
+        }
+
+        function checkWin() {
+            if (state.player1.health <= 0) {
+                endGame(`¡${state.player2.name} Gana!`);
+            } else if (state.player2.health <= 0) {
+                endGame(`¡${state.player1.name} Gana!`);
+            }
+        }
+
+        function gameLoop() {
+            if (!gameActive) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Actualizar y dibujar jugadores
+            state.player1.update();
+            state.player2.update();
+            state.player1.draw();
+            state.player2.draw();
+
+            // Colisión entre jugadores (simple empuje)
+            const p1 = state.player1;
+            const p2 = state.player2;
+            if (p1.x < p2.x + p2.width && p1.x + p1.width > p2.x &&
+                p1.y < p2.y + p2.height && p1.y + p1.height > p2.y) {
+                const dx = (p1.x + p1.width / 2) - (p2.x + p2.width / 2);
+                const dy = (p1.y + p1.height / 2) - (p2.y + p2.height / 2);
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const overlap = (p1.width + p2.width) / 2 - distance;
+                const moveX = dx / distance * overlap / 2;
+                const moveY = dy / distance * overlap / 2;
+                p1.x += moveX;
+                p1.y += moveY;
+                p2.x -= moveX;
+                p2.y -= moveY;
+            }
+
+            // Actualizar y dibujar proyectiles
+            state.projectiles.forEach((proj, index) => {
+                proj.update();
+                proj.draw();
+
+                let opponent = (proj.owner.playerNumber === 1) ? state.player2 : state.player1;
+
+                if (proj.checkCollision(opponent)) {
+                    if (proj.type === 'stun') {
+                        opponent.isStunned = true;
+                        setTimeout(() => opponent.isStunned = false, proj.owner.abilityData.duration * 1000);
+                    } else if (proj.type === 'poison') {
+                        opponent.applyPoison(proj.owner.abilityData.duration, proj.owner.abilityData.damage);
+                    } else {
+                        opponent.takeDamage(proj.damage);
+                    }
+                    if (proj === botProjectile) {
+                         botProjectile = null; // Reiniciar para el bot
+                    }
+                    state.projectiles.splice(index, 1);
+                } else if (proj.x < -20 || proj.x > canvas.width + 20 ||
+                           proj.y < -20 || proj.y > canvas.height + 20) {
+                    if (proj === botProjectile) {
+                         botProjectile = null; // Reiniciar para el bot
+                    }
+                    state.projectiles.splice(index, 1);
+                }
+            });
+            
+            // Actualizar y dibujar habilidades de área
+            state.abilities.forEach((ability, index) => {
+                if (Date.now() > ability.end) {
+                    clearInterval(ability.damageInterval);
+                    state.abilities.splice(index, 1);
+                } else if (ability.type === 'mortar') {
+                    ctx.fillStyle = 'rgba(128, 128, 128, 0.5)';
+                    ctx.fillRect(ability.x, ability.y, 40, 40);
+                }
+            });
+            
+            // Lógica de super del bot (si aplica)
+            if (gameMode === 'bot' && botDifficulty !== 'insane' && Math.random() < 0.01) {
+                state.player2.gainSuper();
+            }
+
+            // Actualizar barras de vida y super
+            player1HealthBar.style.width = `${(state.player1.health / state.player1.stats.health) * 100}%`;
+            player2HealthBar.style.width = `${(state.player2.health / state.player2.stats.health) * 100}%`;
+            player1SuperBar.style.width = `${(state.player1.superMeter / state.player1.abilityData.cost) * 100}%`;
+            player2SuperBar.style.width = `${(state.player2.superMeter / state.player2.abilityData.cost) * 100}%`;
+
+            checkWin();
+        }
+
+        // --- Manejo de eventos ---
+        window.addEventListener('load', () => {
+            const resizeCanvas = () => {
+                canvas.width = gameContainer.clientWidth;
+                canvas.height = gameContainer.clientHeight;
+                if (state.player1 && state.player2) {
+                    state.player1.x = canvas.width * 0.25;
+                    state.player2.x = canvas.width * 0.75;
+                    state.player1.y = canvas.height / 2;
+                    state.player2.y = canvas.height / 2;
+                }
+            };
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+            showPlatformSelection();
+        });
+
+        // Eventos de botones
+        document.getElementById('play-pc-button').addEventListener('click', () => {
+            isMobile = false;
+            showGameModeSelection();
+        });
+        document.getElementById('play-mobile-button').addEventListener('click', () => {
+            isMobile = true;
+            showGameModeSelection();
+        });
+        document.getElementById('play-pvp-button').addEventListener('click', () => {
+            gameMode = 'pvp';
+            showCharacterSelection();
+        });
+        document.getElementById('play-bot-button').addEventListener('click', showDifficultySelection);
+        document.getElementById('startgamebutton').addEventListener('click', startGame);
+
+        document.querySelectorAll('#difficultyselection .action-button').forEach(button => {
+            button.addEventListener('click', () => {
+                botDifficulty = button.dataset.difficulty;
+                showCharacterSelection();
+            });
+        });
+
+        // Eventos de teclado para PC
+        window.addEventListener('keydown', (e) => {
+            if (e.repeat || !gameActive || isMobile) return;
+
+            keys[e.key] = true;
+            const p1 = state.player1;
+            const p2 = state.player2;
+
+            if (p1 && e.key === player1Keys.attack) {
+                p1.attack(p2);
+            }
+           
+            if (p2 && e.key === player2Keys.attack && gameMode === 'pvp') { // Solo jugador 2 en modo pvp
+                p2.attack(p1);
+            }
+
+            if (p1 && e.key === player1Keys.ability) {
+                p1.useAbility(p2);
+            }
+            if (p2 && e.key === player2Keys.ability && gameMode === 'pvp') { // Solo jugador 2 en modo pvp
+                p2.useAbility(p1);
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (!gameActive || isMobile) return;
+            keys[e.key] = false;
+        });
+
+        // Eventos táctiles para botones móviles
+        document.querySelectorAll('.mobile-button').forEach(button => {
+            const key = button.dataset.key;
+            const isAttackOrAbility = (key === ' ' || key === 'Enter' || key === '5' || key === '0');
+            const isP1 = button.id.startsWith('p1');
+            const isP2 = button.id.startsWith('p2');
+
+            // Presionar botón
+            button.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (!gameActive) return;
+
+                if (isP1) {
+                    keys[key] = true;
+                    if (isAttackOrAbility && state.player1) {
+                        if (key === player1Keys.attack) state.player1.attack(state.player2);
+                        if (key === player1Keys.ability) state.player1.useAbility(state.player2);
+                    }
+                }
+                if (isP2 && gameMode === 'pvp') { // Los botones del jugador 2 solo funcionan en PvP
+                    keys[key] = true;
+                    if (isAttackOrAbility && state.player2) {
+                        if (key === player2Keys.attack) state.player2.attack(state.player1);
+                        if (key === player2Keys.ability) state.player2.useAbility(state.player1);
+                    }
+                }
+            }, { passive: false });
+
+            // Soltar botón
+            button.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                if (!gameActive) return;
+                keys[key] = false;
+            });
+        });
+    </script>
+</body>
+</html>
